@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>На сколько % ты жопа?</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 24px 14px;
+    font-family: Arial, sans-serif;
+    color: #f5edf7;
+    background: linear-gradient(135deg, #100d12, #211522, #15111c);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 620px;
+    background: #1b1720;
+    border: 1px solid #332b38;
+    border-radius: 24px;
+    padding: 28px 24px;
+    box-shadow: 0 12px 40px #00000070;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 0 0 10px;
+    font-size: clamp(25px, 6vw, 36px);
+    color: #ffffff;
+  }
+
+  .intro {
+    text-align: center;
+    margin: 0 0 24px;
+    color: #a99cac;
+  }
+
+  .progress {
+    height: 8px;
+    background: #302936;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .bar {
+    height: 100%;
+    width: 0;
+    background: #b65bc8;
+    transition: width .2s;
+  }
+
+  .question {
+    font-size: 21px;
+    line-height: 1.4;
+    font-weight: 700;
+    margin: 0 0 22px;
+    color: #ffffff;
+  }
+
+  .answers {
+    display: grid;
+    gap: 12px;
+  }
+
+  button.answer {
+    width: 100%;
+    text-align: left;
+    padding: 16px 18px;
+    border: 2px solid #3a3040;
+    border-radius: 15px;
+    background: #211c27;
+    font-size: 17px;
+    line-height: 1.4;
+    cursor: pointer;
+    color: #f5edf7;
+    transition: .15s;
+  }
+
+  button.answer:hover {
+    border-color: #b65bc8;
+    background: #2a2030;
+  }
+
+  button.answer:focus-visible,
+  .main-btn:focus-visible {
+    outline: 3px solid #d27be3;
+    outline-offset: 3px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    color: #918495;
+    font-size: 14px;
+  }
+
+  .main-btn {
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 20px;
+    background: #9d42b2;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .15s;
+  }
+
+  .main-btn:hover {
+    background: #b653ca;
+  }
+
+  .main-btn:disabled {
+    opacity: .35;
+    cursor: default;
+  }
+
+  .result {
+    text-align: center;
+  }
+
+  .percent {
+    font-size: clamp(58px, 15vw, 88px);
+    font-weight: 900;
+    color: #c866d9;
+    margin: 18px 0;
+  }
+
+  .result p {
+    font-size: 18px;
+    line-height: 1.5;
+    color: #c3b8c6;
+  }
+
+  .result .main-btn {
+    margin: 6px;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+
+<body>
+
+<main class="card">
+
+  <section id="quiz">
+
+    <h1>На сколько % ты жопа?</h1>
+
+    <p class="intro">
+      Отвечай честно и узнай свой результат.
+    </p>
+
+    <div class="progress">
+      <div class="bar" id="bar"></div>
+    </div>
+
+    <div id="question" class="question"></div>
+
+    <div id="answers" class="answers"></div>
+
+    <div class="footer">
+      <span id="counter"></span>
+      <button class="main-btn" id="next" disabled>Далее</button>
+    </div>
+
+  </section>
+
+
+  <section id="result" class="result hidden">
+
+    <h1>Твой результат</h1>
+
+    <div class="percent" id="percent"></div>
+
+    <p id="resultText"></p>
+
+    <button class="main-btn" id="restart">
+      Пройти ещё раз
+    </button>
+
+    <button class="main-btn" id="share">
+      Поделиться результатом
+    </button>
+
+  </section>
+
+</main>
+
+
+<script>
+
+const questions = [
+
+  {
+    q: "1. Есть ли в твоём окружении жопы?",
+    a: [
+      "Да.",
+      "Нет."
+    ],
+    s: [1, 0]
+  },
+
+  {
+    q: "2. Если бы жопа могла отправлять сообщения, что бы она написала?",
+    a: [
+      "Катя жопа!",
+      "Аня жопа!"
+    ],
+    s: [1, 1]
+  },
+
+  {
+    q: "3. Если бы жопа стала супергероем, как бы её звали?",
+    a: [
+      "Капитан Пук",
+      "Железная Булка"
+    ],
+    s: [1, 0]
+  },
+
+  {
+    q: "4. Если друг назвал тебя жопой, что ответишь?",
+    a: [
+      "«Сам такой!»",
+      "«Спасибо»"
+    ],
+    s: [1, 1]
+  },
+
+  {
+    q: "5. Как часто ты говоришь «ну и жопа»?",
+    a: [
+      "Только в особых случаях.",
+      "Каждый день."
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "6. Ты когда-нибудь смеялся над шуткой про жопу дольше, чем она того заслуживала?",
+    a: [
+      "Да, но она этого заслуживала.",
+      "Нет, я серьёзный человек."
+    ],
+    s: [1, 0]
+  },
+
+  {
+    q: "7. Как бы ты назвал свой личный трон?",
+    a: [
+      "Обычный стул",
+      "Жопный престол"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "8. Если бы жопы выдавали паспорта, какая у тебя была бы профессия?",
+    a: [
+      "Уважаемый гражданин",
+      "Главный жоповед"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "9. Что ты сделаешь, если увидишь надпись «ЖОПА» где-нибудь?",
+    a: [
+      "Пройду мимо.",
+      "Сфоткаю и отправлю всем."
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "10. Какой подарок тебя больше обрадует?",
+    a: [
+      "Книга с умными мыслями",
+      "Подушка в форме жопы"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "11. Если бы у тебя была кнопка «добавить жопности», нажал бы?",
+    a: [
+      "Ни за что.",
+      "Ну… один разочек."
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "12. Как ты выбираешь место, где сесть?",
+    a: [
+      "Где максимально по-жопному.",
+      "Где удобно."
+    ],
+    s: [1, 0]
+  },
+
+  {
+    q: "13. Что важнее в жизни?",
+    a: [
+      "Порядок и дисциплина",
+      "Чтобы жопа была довольна"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "14. Тебя попросили придумать девиз для жопы. Что выберешь?",
+    a: [
+      "«Всегда вперёд!»",
+      "«Сидим уверенно»"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "15. Если кто-то скажет «это полный абзац», ты услышишь…",
+    a: [
+      "Обычную фразу",
+      "Что-то подозрительно жопное"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "16. Какой титул тебе подходит?",
+    a: [
+      "Повелитель важных дел",
+      "Герцог жопных дел"
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "17. Ты когда-нибудь давал людям странные имена?",
+    a: [
+      "Нет, у людей есть свои имена.",
+      "Да, и одна из них точно Жопа."
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "18. Если бы жопность измерялась в килограммах, ты бы…",
+    a: [
+      "Попросил не взвешивать.",
+      "Потребовал отдельные весы."
+    ],
+    s: [0, 1]
+  },
+
+  {
+    q: "19. Последний вопрос: признаёшь, что в тебе есть хоть немного жопы?",
+    a: [
+      "Да, и горжусь этим.",
+      "Нет, я образец приличия."
+    ],
+    s: [1, 0]
+  }
+
+];
+
+
+let index = 0;
+let score = 0;
+let chosen = null;
+
+
+const questionEl = document.getElementById("question");
+const answersEl = document.getElementById("answers");
+const nextBtn = document.getElementById("next");
+
+
+function render() {
+
+  chosen = null;
+
+  const item = questions[index];
+
+  questionEl.textContent = item.q;
+
+  answersEl.innerHTML = "";
+
+
+  item.a.forEach((label, i) => {
+
+    const btn = document.createElement("button");
+
+    btn.className = "answer";
+
+    btn.textContent = label;
+
+
+    btn.onclick = () => {
+
+      chosen = i;
+
+
+      [...answersEl.children].forEach(b => {
+
+        b.style.borderColor = "";
+        b.style.background = "";
+
+      });
+
+
+      btn.style.borderColor = "#9d42b2";
+      btn.style.background = "#2a2030";
+
+      nextBtn.disabled = false;
+
+    };
+
+
+    answersEl.appendChild(btn);
+
+  });
+
+
+  document.getElementById("counter").textContent =
+    `${index + 1} / ${questions.length}`;
+
+
+  document.getElementById("bar").style.width =
+    `${index / questions.length * 100}%`;
+
+
+  nextBtn.textContent =
+    index === questions.length - 1
+      ? "Результат"
+      : "Далее";
+
+
+  nextBtn.disabled = true;
+
+}
+
+
+nextBtn.onclick = () => {
+
+  if (chosen === null) return;
+
+
+  score += questions[index].s[chosen];
+
+  index++;
+
+
+  if (index < questions.length) {
+
+    render();
+
+  } else {
+
+    showResult();
+
+  }
+
+};
+
+
+function showResult() {
+
+  document.getElementById("quiz").classList.add("hidden");
+
+  document.getElementById("result").classList.remove("hidden");
+
+
+  const pct =
+    Math.round(score / questions.length * 100);
+
+
+  document.getElementById("percent").textContent =
+    pct + "%";
+
+
+  document.getElementById("resultText").textContent =
+    `Ты набрал(а) ${score} из ${questions.length} баллов.`;
+
+}
+
+
+document.getElementById("restart").onclick = () => {
+
+  index = 0;
+  score = 0;
+
+  document.getElementById("result").classList.add("hidden");
+
+  document.getElementById("quiz").classList.remove("hidden");
+
+  render();
+
+};
+
+
+document.getElementById("share").onclick = async () => {
+
+  const pct =
+    Math.round(score / questions.length * 100);
+
+  const text =
+    `Я на ${pct}% жопа! А ты?`;
+
+
+  if (navigator.share) {
+
+    try {
+
+      await navigator.share({
+        title: "На сколько % ты жопа?",
+        text,
+        url: location.href
+      });
+
+    } catch(e) {}
+
+  } else {
+
+    try {
+
+      await navigator.clipboard.writeText(
+        text + " " + location.href
+      );
+
+      document.getElementById("share").textContent =
+        "Скопировано!";
+
+    } catch(e) {
+
+      prompt(
+        "Скопируй результат:",
+        text + " " + location.href
+      );
+
+    }
+
+  }
+
+};
+
+
+render();
+
+</script>
+
+</body>
+</html>
